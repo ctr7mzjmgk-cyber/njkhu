@@ -85,7 +85,7 @@ export default function AuditPage() {
   const canView = permissions.includes("audit.view" as never);
 
   const fetchLogs = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     try {
       let query = supabase

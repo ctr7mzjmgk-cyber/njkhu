@@ -66,7 +66,7 @@ export default function CertificatesPage() {
   const canView = permissions.includes("certificates.view" as never) || canCreate;
 
   const fetchCertificates = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     try {
       const studentIds = (await supabase.from("students").select("id").eq("institution_id", profile.institution_id)).data?.map((r: { id: string }) => r.id) ?? [];

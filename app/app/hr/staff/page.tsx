@@ -89,7 +89,7 @@ export default function StaffPage() {
   const canDelete = permissions.includes("hr.delete" as never);
 
   const fetchStaff = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     setError(null);
     try {

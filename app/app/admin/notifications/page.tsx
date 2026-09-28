@@ -65,7 +65,7 @@ export default function NotificationsPage() {
   const canView = permissions.includes("notifications.view" as never) || canCreate;
 
   const fetchNotifications = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     try {
       let query = supabase

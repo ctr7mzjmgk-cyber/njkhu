@@ -44,7 +44,7 @@ export default function ProgramsPage() {
   const canDelete = permissions.includes("programs.delete" as never);
 
   const fetch = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     try {
       let query = supabase

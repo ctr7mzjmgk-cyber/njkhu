@@ -90,7 +90,7 @@ export default function StudentsPage() {
   const canDelete = permissions.includes("students.delete" as never);
 
   const fetchStudents = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     setError(null);
 

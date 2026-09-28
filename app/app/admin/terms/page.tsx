@@ -50,7 +50,7 @@ export default function TermsPage() {
   const canView = permissions.includes("settings.view" as never) || canManage;
 
   const fetchAcademicYears = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     const { data } = await supabase
       .from("academic_years")
       .select("*")
@@ -60,7 +60,7 @@ export default function TermsPage() {
   }, [profile?.institution_id]);
 
   const fetchTerms = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     try {
       let query = supabase

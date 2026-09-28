@@ -66,7 +66,7 @@ export default function AttendancePage() {
   }, [profile?.institution_id]);
 
   const fetchSchedules = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     try {
       let query = supabase

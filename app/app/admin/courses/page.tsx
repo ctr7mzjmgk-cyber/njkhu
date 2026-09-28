@@ -58,7 +58,7 @@ export default function CoursesPage() {
   const canDelete = permissions.includes("courses.delete" as never);
 
   const fetch = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     try {
       let query = supabase

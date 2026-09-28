@@ -81,7 +81,7 @@ export default function AssignmentsPage() {
   const canDelete = permissions.includes("hr.delete" as never);
 
   const fetchAssignments = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     setError(null);
     try {
@@ -104,7 +104,7 @@ export default function AssignmentsPage() {
   }, [profile?.institution_id]);
 
   const fetchOptions = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     try {
       const instId = profile.institution_id;
       const [staffRes, deptRes, posRes] = await Promise.all([

@@ -81,7 +81,7 @@ export default function DocumentsPage() {
   const canView = permissions.includes("documents.view" as never) || canCreate;
 
   const fetchDocuments = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     try {
       let query = supabase

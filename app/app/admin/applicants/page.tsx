@@ -97,7 +97,7 @@ export default function ApplicantsPage() {
   const canConvert = permissions.includes("students.create" as never);
 
   const fetchApplicants = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     setError(null);
 

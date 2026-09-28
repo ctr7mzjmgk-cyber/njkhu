@@ -61,7 +61,7 @@ export default function DepartmentsPage() {
   const canDelete = permissions.includes("hr.delete" as never);
 
   const fetchDepartments = useCallback(async () => {
-    if (!profile?.institution_id) { setLoading(false); return; }
+    if (!profile?.institution_id) return;
     setLoading(true);
     setError(null);
     try {
