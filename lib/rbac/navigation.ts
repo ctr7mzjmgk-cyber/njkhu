@@ -25,6 +25,7 @@ import {
   Network,
   Clock,
   Cpu,
+  QrCode,
   type LucideIcon,
 } from "lucide-react";
 
@@ -305,6 +306,12 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Pointage",
         href: "/app/hr/attendance",
         icon: Clock,
+        permissions: ["hr.view"],
+      },
+      {
+        label: "Mon QR pointage",
+        href: "/app/hr/my-qr",
+        icon: QrCode,
         permissions: ["hr.view"],
       },
       {

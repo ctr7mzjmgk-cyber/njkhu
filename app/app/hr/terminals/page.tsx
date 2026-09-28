@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
 import {
   Cpu, Plus, Search, Loader as Loader2, Copy, Check, KeyRound,
-  Power, Settings, Trash2, Clock,
+  Power, Settings, Trash2, Clock, ExternalLink,
 } from "lucide-react";
 import type { Database } from "@/lib/types/database";
 
@@ -417,6 +417,17 @@ export default function TerminalsPage() {
                       {canManage && (
                         <TableCell>
                           <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              asChild
+                              title="Ouvrir la borne"
+                            >
+                              <a href={`/rh/borne-pointage/${t.id}`} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"

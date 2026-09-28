@@ -1230,6 +1230,31 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["attendance_events"]["Insert"]>;
       };
+      attendance_qr_tokens: {
+        Row: {
+          id: string;
+          institution_id: string;
+          token: string;
+          token_type: "employee" | "terminal";
+          staff_id: string | null;
+          terminal_id: string | null;
+          expires_at: string;
+          used_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          token?: string;
+          token_type: string;
+          staff_id?: string | null;
+          terminal_id?: string | null;
+          expires_at: string;
+          used_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["attendance_qr_tokens"]["Insert"]>;
+      };
     };
     Views: Record<string, never>;
     Functions: {
