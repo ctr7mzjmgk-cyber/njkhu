@@ -75,6 +75,7 @@ export const PERMISSIONS = [
   "hr.create",
   "hr.update",
   "hr.delete",
+  "attendance.manage",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

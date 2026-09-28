@@ -23,6 +23,8 @@ import {
   Building2,
   UserCheck,
   Network,
+  Clock,
+  Cpu,
   type LucideIcon,
 } from "lucide-react";
 
@@ -298,6 +300,18 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/app/hr/org-chart",
         icon: Network,
         permissions: ["hr.view"],
+      },
+      {
+        label: "Pointage",
+        href: "/app/hr/attendance",
+        icon: Clock,
+        permissions: ["hr.view"],
+      },
+      {
+        label: "Terminaux pointage",
+        href: "/app/hr/terminals",
+        icon: Cpu,
+        permissions: ["attendance.manage"],
       },
     ],
   },

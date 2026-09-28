@@ -49,3 +49,6 @@ enable_confirmations = false
 
 [functions.manage-user]
 verify_jwt = false
+
+[functions.attendance-clock]
+verify_jwt = false

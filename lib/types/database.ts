@@ -1147,6 +1147,89 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["hr_assignments"]["Insert"]>;
       };
+      attendance_terminals: {
+        Row: {
+          id: string;
+          institution_id: string;
+          code: string;
+          name: string;
+          terminal_type: "physical_qr" | "fingerprint" | "virtual" | "mobile";
+          location: string | null;
+          api_key_hash: string | null;
+          is_active: boolean;
+          last_seen_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          code: string;
+          name: string;
+          terminal_type?: string;
+          location?: string | null;
+          api_key_hash?: string | null;
+          is_active?: boolean;
+          last_seen_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["attendance_terminals"]["Insert"]>;
+      };
+      institution_attendance_config: {
+        Row: {
+          id: string;
+          institution_id: string;
+          enabled_methods: string[];
+          require_geolocation: boolean;
+          grace_period_minutes: number;
+          auto_clock_out_hours: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          enabled_methods?: string[];
+          require_geolocation?: boolean;
+          grace_period_minutes?: number;
+          auto_clock_out_hours?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["institution_attendance_config"]["Insert"]>;
+      };
+      attendance_events: {
+        Row: {
+          id: string;
+          institution_id: string;
+          staff_id: string;
+          terminal_id: string | null;
+          event_type: "clock_in" | "clock_out";
+          method: "employee_qr" | "terminal_qr" | "fingerprint" | "manual";
+          server_timestamp: string;
+          client_timestamp: string | null;
+          latitude: number | null;
+          longitude: number | null;
+          metadata: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          staff_id: string;
+          terminal_id?: string | null;
+          event_type: string;
+          method: string;
+          server_timestamp?: string;
+          client_timestamp?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["attendance_events"]["Insert"]>;
+      };
     };
     Views: Record<string, never>;
     Functions: {
