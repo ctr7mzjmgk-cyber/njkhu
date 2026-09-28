@@ -1,0 +1,464 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 42 40% 96%;
+    --foreground: 210 40% 12%;
+    --card: 42 35% 99%;
+    --card-foreground: 210 40% 12%;
+    --popover: 42 35% 99%;
+    --popover-foreground: 210 40% 12%;
+    --primary: 160 84% 27%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 42 25% 92%;
+    --secondary-foreground: 210 40% 12%;
+    --muted: 42 22% 93%;
+    --muted-foreground: 205 15% 38%;
+    --accent: 150 30% 90%;
+    --accent-foreground: 160 84% 20%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 18% 86%;
+    --input: 40 16% 82%;
+    --ring: 160 84% 27%;
+    --chart-1: 160 84% 27%;
+    --chart-2: 210 80% 48%;
+    --chart-3: 266 60% 52%;
+    --chart-4: 38 90% 48%;
+    --chart-5: 0 72% 45%;
+    --radius: 0.75rem;
+    --sidebar: 42 35% 99%;
+    --sidebar-foreground: 210 40% 12%;
+    --sidebar-accent: 150 30% 90%;
+    --sidebar-accent-foreground: 160 84% 20%;
+  }
+  .dark {
+    --background: 210 30% 7%;
+    --foreground: 42 25% 94%;
+    --card: 210 28% 10%;
+    --card-foreground: 42 25% 94%;
+    --popover: 210 28% 10%;
+    --popover-foreground: 42 25% 94%;
+    --primary: 160 70% 52%;
+    --primary-foreground: 210 30% 7%;
+    --secondary: 210 22% 16%;
+    --secondary-foreground: 42 25% 94%;
+    --muted: 210 22% 14%;
+    --muted-foreground: 42 10% 62%;
+    --accent: 160 22% 18%;
+    --accent-foreground: 160 70% 65%;
+    --destructive: 0 55% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 18% 20%;
+    --input: 210 18% 20%;
+    --ring: 160 70% 52%;
+    --chart-1: 160 70% 52%;
+    --chart-2: 210 80% 62%;
+    --chart-3: 266 65% 68%;
+    --chart-4: 38 90% 60%;
+    --chart-5: 0 64% 58%;
+    --sidebar: 210 28% 9%;
+    --sidebar-foreground: 42 25% 94%;
+    --sidebar-accent: 160 22% 18%;
+    --sidebar-accent-foreground: 160 70% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 3px;
+  }
+}
+
+.bulletin-paper {
+  max-width: 210mm;
+  min-height: 297mm;
+  padding: 12mm;
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.bulletin-logo-frame {
+  display: flex;
+  height: 72px;
+  width: 72px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 3px solid #1e3a8a;
+  background: white;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 8mm;
+  }
+  body {
+    background: white !important;
+  }
+  .no-print,
+  .bulletin-screen-shell > .no-print {
+    display: none !important;
+  }
+  .bulletin-paper {
+    width: 100%;
+    max-width: none;
+    min-height: auto;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+  .break-inside-avoid {
+    break-inside: avoid;
+  }
+}
+
+/* ============================================================
+   School Certificate A4 — Print-Optimized Styles
+   ============================================================ */
+
+.school-cert-screen-shell {
+  min-height: 100vh;
+  background: #e9edf2;
+  padding: 24px 16px;
+}
+
+.school-cert-paper {
+  width: 210mm;
+  min-height: 297mm;
+  max-width: 210mm;
+  margin: 0 auto;
+  background: #ffffff;
+  color: #111827;
+  padding: 18mm 16mm;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.10);
+  font-family: "Times New Roman", Georgia, "Noto Serif", serif;
+  font-size: 13pt;
+  line-height: 1.65;
+  position: relative;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  box-sizing: border-box;
+}
+
+.school-cert-header {
+  text-align: center;
+  margin-bottom: 6mm;
+}
+
+.school-cert-flag {
+  width: 36mm;
+  height: 24mm;
+  object-fit: contain;
+  margin: 0 auto 3mm;
+  display: block;
+}
+
+.school-cert-flag-placeholder {
+  width: 36mm;
+  height: 24mm;
+  margin: 0 auto 3mm;
+  border: 1px dashed #cbd5e1;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 8pt;
+  background: #f8fafc;
+}
+
+.school-cert-republic {
+  font-size: 15pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #1e293b;
+  margin: 0;
+}
+
+.school-cert-motto {
+  font-size: 10pt;
+  font-style: italic;
+  color: #475569;
+  margin: 1mm 0 2mm;
+}
+
+.school-cert-separator {
+  width: 60%;
+  margin: 2mm auto;
+  border: none;
+  border-top: 1px solid #64748b;
+}
+
+.school-cert-ministry {
+  font-size: 11pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #334155;
+  margin: 0;
+}
+
+.school-cert-inst-block {
+  margin-top: 3mm;
+}
+
+.school-cert-inst-name {
+  font-size: 13pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #1e293b;
+  margin: 0;
+}
+
+.school-cert-inst-short {
+  font-size: 10pt;
+  color: #64748b;
+  margin-top: 0.5mm;
+}
+
+.school-cert-logo {
+  width: 22mm;
+  height: 22mm;
+  object-fit: contain;
+  margin: 3mm auto 0;
+  display: block;
+  border-radius: 50%;
+  border: 2px solid #1e3a8a;
+  padding: 1mm;
+  background: white;
+}
+
+.school-cert-logo-placeholder {
+  width: 22mm;
+  height: 22mm;
+  margin: 3mm auto 0;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+}
+
+.school-cert-title-block {
+  text-align: center;
+  margin: 8mm 0 6mm;
+}
+
+.school-cert-title {
+  font-size: 20pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #1e293b;
+  margin: 0;
+  padding-bottom: 2mm;
+}
+
+.school-cert-title-underline {
+  width: 50%;
+  margin: 2mm auto 0;
+  border: none;
+  border-top: 2px solid #1e3a8a;
+}
+
+.school-cert-body {
+  margin: 6mm 0;
+  text-align: justify;
+  font-size: 12.5pt;
+  line-height: 1.8;
+  color: #1f2937;
+}
+
+.school-cert-body p {
+  margin: 0 0 4mm;
+  text-indent: 10mm;
+}
+
+.school-cert-body p.school-cert-closing {
+  text-indent: 10mm;
+  margin-top: 3mm;
+}
+
+.school-cert-field {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 1.5px;
+}
+
+.school-cert-date-place {
+  margin: 8mm 0 4mm;
+  text-align: right;
+  font-size: 12pt;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.school-cert-signature-zone {
+  margin-top: 8mm;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.school-cert-signature-block {
+  text-align: center;
+  width: 70mm;
+}
+
+.school-cert-signature-label {
+  font-size: 11pt;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 1mm;
+}
+
+.school-cert-signature-img {
+  width: 40mm;
+  height: 18mm;
+  object-fit: contain;
+  margin: 1mm auto;
+  display: block;
+  opacity: 0.85;
+}
+
+.school-cert-signature-placeholder {
+  width: 40mm;
+  height: 18mm;
+  margin: 1mm auto;
+  border-bottom: 1px dotted #94a3b8;
+}
+
+.school-cert-stamp {
+  width: 28mm;
+  height: 28mm;
+  object-fit: contain;
+  margin: 2mm auto 0;
+  display: block;
+  opacity: 0.75;
+}
+
+.school-cert-stamp-placeholder {
+  width: 28mm;
+  height: 28mm;
+  margin: 2mm auto 0;
+  border: 2px dashed #cbd5e1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e1;
+  font-size: 8pt;
+}
+
+.school-cert-signatory-name {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 2mm;
+}
+
+.school-cert-signatory-function {
+  font-size: 10pt;
+  color: #475569;
+  margin-top: 0.5mm;
+}
+
+.school-cert-actions {
+  max-width: 210mm;
+  margin: 0 auto 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html, body {
+    background: white !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  body.school-cert-print-mode .app-shell-root {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  body.school-cert-print-mode .app-shell-sidebar,
+  body.school-cert-print-mode .app-shell-header,
+  .school-cert-actions,
+  .no-print {
+    display: none !important;
+  }
+
+  body.school-cert-print-mode .app-shell-main {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  body.school-cert-print-mode .app-shell-content {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .school-cert-screen-shell {
+    background: white !important;
+    padding: 0 !important;
+    min-height: auto;
+  }
+
+  .school-cert-paper {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 18mm 16mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+}
