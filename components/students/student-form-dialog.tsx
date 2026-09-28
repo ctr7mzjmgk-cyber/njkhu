@@ -98,13 +98,25 @@ export function StudentFormDialog({ open, onOpenChange, student, onSaved }: Stud
       setEmergencyContactPhone(student?.emergency_contact_phone ?? "");
       setErrors({});
 
-      if (!student && profile?.institution_id) {
-        generateStudentNumber(profile.institution_id);
+      if (!student) {
+        if (profile?.institution_id) {
+          generateStudentNumber(profile.institution_id);
+        } else {
+          setStudentNumber("");
+        }
       }
     }
   }, [open, student, profile?.institution_id]);
 
   const generateStudentNumber = async (institutionId: string) => {
+    if (!institutionId) {
+      toast({
+        title: "Aucune institution",
+        description: "Votre compte n'est associé à aucune institution. Contactez un administrateur pour générer un matricule.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoadingNumber(true);
     try {
       const { data, error } = await supabase.rpc("generate_student_number", {
@@ -112,8 +124,12 @@ export function StudentFormDialog({ open, onOpenChange, student, onSaved }: Stud
       });
       if (error) throw error;
       if (data) setStudentNumber(data as string);
-    } catch {
-      // fallback: keep empty, user can type manually
+    } catch (err) {
+      toast({
+        title: "Matricule non généré",
+        description: err instanceof Error ? err.message : "Impossible de générer le matricule automatiquement.",
+        variant: "destructive",
+      });
     } finally {
       setLoadingNumber(false);
     }

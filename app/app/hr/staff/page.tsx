@@ -301,6 +301,9 @@ function StaffFormDialog({
       if (!staff && institutionId) {
         generateStaffNumber(institutionId);
       }
+      if (!staff && !institutionId) {
+        setStaffNumber("");
+      }
       setCivility(staff?.civility ?? "");
       setFirstName(staff?.first_name ?? "");
       setLastName(staff?.last_name ?? "");
@@ -323,13 +326,25 @@ function StaffFormDialog({
   }, [open, staff]);
 
   const generateStaffNumber = async (instId: string) => {
+    if (!instId) {
+      toast({
+        title: "Aucune institution",
+        description: "Votre compte n'est associé à aucune institution. Contactez un administrateur pour générer un matricule.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoadingNumber(true);
     try {
       const { data, error } = await supabase.rpc("generate_staff_number", { p_institution_id: instId });
       if (error) throw error;
       if (data) setStaffNumber(data as string);
-    } catch {
-      // fallback: keep empty
+    } catch (err) {
+      toast({
+        title: "Matricule non généré",
+        description: err instanceof Error ? err.message : "Impossible de générer le matricule automatiquement.",
+        variant: "destructive",
+      });
     } finally {
       setLoadingNumber(false);
     }
@@ -361,6 +376,10 @@ function StaffFormDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!institutionId) {
+      toast({ title: "Aucune institution", description: "Votre compte n'est associé à aucune institution. Contactez un administrateur.", variant: "destructive" });
+      return;
+    }
     if (!staffNumber.trim() || !firstName.trim() || !lastName.trim()) {
       toast({ title: "Champs requis", description: "Matricule, prénom et nom sont obligatoires.", variant: "destructive" });
       return;

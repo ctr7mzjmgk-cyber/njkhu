@@ -100,13 +100,25 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, onSaved }: Teac
       setEmergencyContactPhone(teacher?.emergency_contact_phone ?? "");
       setErrors({});
 
-      if (!teacher && profile?.institution_id) {
-        generateTeacherNumber(profile.institution_id);
+      if (!teacher) {
+        if (profile?.institution_id) {
+          generateTeacherNumber(profile.institution_id);
+        } else {
+          setTeacherNumber("");
+        }
       }
     }
   }, [open, teacher, profile?.institution_id]);
 
   const generateTeacherNumber = async (institutionId: string) => {
+    if (!institutionId) {
+      toast({
+        title: "Aucune institution",
+        description: "Votre compte n'est associé à aucune institution. Contactez un administrateur pour générer un matricule.",
+        variant: "destructive",
+      });
+      return;
+    }
     setLoadingNumber(true);
     try {
       const { data, error } = await supabase.rpc("generate_teacher_number", {
@@ -114,8 +126,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, onSaved }: Teac
       });
       if (error) throw error;
       if (data) setTeacherNumber(data as string);
-    } catch {
-      // fallback: keep empty, user can type manually
+    } catch (err) {
+      toast({
+        title: "Matricule non généré",
+        description: err instanceof Error ? err.message : "Impossible de générer le matricule automatiquement.",
+        variant: "destructive",
+      });
     } finally {
       setLoadingNumber(false);
     }
