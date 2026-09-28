@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card } from "@/components/ui/card";
@@ -10,10 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase/client";
-import { Save, Loader as Loader2, Lock, KeyRound } from "lucide-react";
+import { Save, Loader as Loader2, Lock, KeyRound, Building2, AlertCircle } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+
+type Institution = { id: string; name: string; code: string };
 
 export default function ProfilePage() {
-  const { user, profile, roles } = useAuth();
+  const { user, profile, roles, refresh } = useAuth();
+  const { toast } = useToast();
   const [firstName, setFirstName] = useState(profile?.first_name ?? "");
   const [lastName, setLastName] = useState(profile?.last_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
@@ -26,6 +33,44 @@ export default function ProfilePage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordSaved, setPasswordSaved] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [selectedInstitution, setSelectedInstitution] = useState("");
+  const [linkingInstitution, setLinkingInstitution] = useState(false);
+  const [institutionLinked, setInstitutionLinked] = useState(false);
+
+  useEffect(() => {
+    if (!profile?.institution_id) {
+      supabase
+        .from("institutions")
+        .select("id, name, code")
+        .eq("is_active", true)
+        .order("name")
+        .then(({ data }) => {
+          if (data) setInstitutions(data as Institution[]);
+        });
+    }
+  }, [profile?.institution_id]);
+
+  const handleLinkInstitution = async () => {
+    if (!profile || !selectedInstitution) return;
+    setLinkingInstitution(true);
+    setInstitutionLinked(false);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ institution_id: selectedInstitution })
+        .eq("id", profile.id);
+      if (error) throw error;
+      setInstitutionLinked(true);
+      toast({ title: "Institution associée", description: "Votre compte est maintenant lié à l'institution. La génération de matricules est disponible." });
+      await refresh();
+    } catch (err) {
+      toast({ title: "Erreur", description: err instanceof Error ? err.message : "Impossible d'associer l'institution.", variant: "destructive" });
+    } finally {
+      setLinkingInstitution(false);
+    }
+  };
 
   const displayName =
     profile && (profile.first_name || profile.last_name)
@@ -96,6 +141,49 @@ export default function ProfilePage() {
       <PageHeader title="Mon profil" description="Vos informations personnelles" />
 
       <div className="max-w-2xl space-y-6">
+        {!profile?.institution_id && (
+          <Card className="p-6 border-amber-200 bg-amber-50">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-amber-900">Aucune institution associée</h3>
+                <p className="text-sm text-amber-700 mt-1 mb-4">
+                  Votre compte n'est lié à aucune institution. La création d'étudiants, de formateurs et de personnel est bloquée, et les matricules ne peuvent pas être générés. Associez votre compte à une institution ci-dessous.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Select value={selectedInstitution} onValueChange={setSelectedInstitution}>
+                    <SelectTrigger className="w-full sm:w-[300px]">
+                      <SelectValue placeholder="Sélectionner une institution" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {institutions.map((inst) => (
+                        <SelectItem key={inst.id} value={inst.id}>
+                          {inst.name} ({inst.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleLinkInstitution}
+                    disabled={!selectedInstitution || linkingInstitution}
+                  >
+                    {linkingInstitution ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Association...</>
+                    ) : (
+                      <><Building2 className="w-4 h-4 mr-2" /> Associer</>
+                    )}
+                  </Button>
+                </div>
+                {institutionLinked && (
+                  <p className="text-sm text-green-700 mt-3 flex items-center gap-1">
+                    Institution associée avec succès. Vous pouvez maintenant créer des étudiants, formateurs et personnel.
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
         <Card className="p-6">
           <div className="flex items-center gap-4 mb-6">
             <Avatar className="w-16 h-16">
