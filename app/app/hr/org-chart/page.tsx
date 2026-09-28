@@ -65,7 +65,7 @@ export default function OrgChartPage() {
   const [unassignedStaff, setUnassignedStaff] = useState<StaffWithAssignment[]>([]);
 
   const fetchOrgChart = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     setLoading(true);
     setError(null);
     try {

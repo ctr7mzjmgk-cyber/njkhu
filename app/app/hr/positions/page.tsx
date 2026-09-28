@@ -63,7 +63,7 @@ export default function PositionsPage() {
   const canDelete = permissions.includes("hr.delete" as never);
 
   const fetchDepartments = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     const { data } = await supabase
       .from("hr_departments")
       .select("*")
@@ -74,7 +74,7 @@ export default function PositionsPage() {
   }, [profile?.institution_id]);
 
   const fetchPositions = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     setLoading(true);
     setError(null);
     try {

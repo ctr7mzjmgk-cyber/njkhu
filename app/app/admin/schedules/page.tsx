@@ -64,7 +64,7 @@ export default function SchedulesPage() {
   }, [profile?.institution_id]);
 
   const fetch = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     setLoading(true);
     try {
       let query = supabase

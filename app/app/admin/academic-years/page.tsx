@@ -39,7 +39,7 @@ export default function AcademicYearsPage() {
   const canView = permissions.includes("settings.view" as never) || canManage;
 
   const fetch = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase

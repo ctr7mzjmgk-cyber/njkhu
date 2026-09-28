@@ -68,7 +68,7 @@ export default function ExpensesPage() {
   const canDelete = permissions.includes("expenses.delete" as never);
 
   const fetchExpenses = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     setLoading(true);
     setError(null);
     try {
@@ -94,7 +94,7 @@ export default function ExpensesPage() {
   }, [profile?.institution_id, categoryFilter, search, page]);
 
   const fetchStats = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     try {
       const { data } = await supabase
         .from("expenses")
