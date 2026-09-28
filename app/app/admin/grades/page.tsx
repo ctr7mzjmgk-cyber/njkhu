@@ -99,7 +99,7 @@ export default function AssessmentsPage() {
   }, [profile?.institution_id]);
 
   const fetch = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     setLoading(true);
     try {
       const classIds = (await supabase.from("classes").select("id").eq("institution_id", profile.institution_id)).data?.map((r: { id: string }) => r.id) ?? [];

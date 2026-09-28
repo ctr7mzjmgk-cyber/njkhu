@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 // Edge function for user management (create, roles, toggle, link student/staff)
-// Updated: 2026-09-23 - fix deployment
+// Updated: 2026-09-28 - force redeploy v3
 
 type Database = {
   public: {

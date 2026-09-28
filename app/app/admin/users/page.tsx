@@ -74,7 +74,7 @@ export default function UsersPage() {
   const isSuperAdmin = currentUserRoles.includes("super_admin");
 
   const fetchUsers = useCallback(async () => {
-    if (!currentUser?.institution_id) return;
+    if (!currentUser?.institution_id) { setLoading(false); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase

@@ -108,7 +108,7 @@ export default function PaymentsPage() {
   const canRefund = permissions.includes("refunds.create" as never);
 
   const fetchPlans = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     setLoading(true);
     setError(null);
     try {
@@ -136,7 +136,7 @@ export default function PaymentsPage() {
   }, [profile?.institution_id, statusFilter, search, page]);
 
   const fetchStats = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     try {
       const { data: allPlans } = await supabase
         .from("payment_plans")

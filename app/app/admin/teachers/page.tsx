@@ -73,7 +73,7 @@ export default function TeachersPage() {
   const canDelete = permissions.includes("teachers.delete" as never);
 
   const fetchTeachers = useCallback(async () => {
-    if (!profile?.institution_id) return;
+    if (!profile?.institution_id) { setLoading(false); return; }
     setLoading(true);
     setError(null);
     try {
