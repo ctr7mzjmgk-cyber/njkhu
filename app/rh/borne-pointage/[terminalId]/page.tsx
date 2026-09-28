@@ -14,7 +14,20 @@ import {
 
 const QR_TTL = 10;
 
-import { supabase } from "@/lib/supabase/client";
+async function callEdgeFunction(body: Record<string, unknown>): Promise<{ data: any; error: string | null }> {
+  try {
+    const response = await fetch("/api/attendance-clock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    if (!response.ok) return { data: null, error: data.error || `Erreur ${response.status}` };
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : "Erreur réseau" };
+  }
+}
 
 export default function TerminalKioskPage({ params }: { params: { terminalId: string } }) {
   const { terminalId } = params;
@@ -60,17 +73,14 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
 
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("attendance-clock", {
-        body: {
-          action: "terminal_qr",
-          method: "terminal_qr",
-          terminal_id: terminalId,
-          terminal_key: useKey,
-        },
+      const { data, error } = await callEdgeFunction({
+        action: "terminal_qr",
+        method: "terminal_qr",
+        terminal_id: terminalId,
+        terminal_key: useKey,
       });
 
-      if (error) throw new Error(error.message || "Erreur");
-      if (data?.error) throw new Error(data.error);
+      if (error) throw new Error(error);
 
       sessionStorage.setItem(`terminal_key_${terminalId}`, useKey);
       setAuthenticated(true);
@@ -98,17 +108,14 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
     if (!terminalKey) return;
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("attendance-clock", {
-        body: {
-          action: "terminal_qr",
-          method: "terminal_qr",
-          terminal_id: terminalId,
-          terminal_key: terminalKey,
-        },
+      const { data, error } = await callEdgeFunction({
+        action: "terminal_qr",
+        method: "terminal_qr",
+        terminal_id: terminalId,
+        terminal_key: terminalKey,
       });
 
-      if (error) throw new Error(error.message || "Erreur");
-      if (data?.error) throw new Error(data.error);
+      if (error) throw new Error(error);
       setToken(data.token);
     } catch {
       setHeartbeatOk(false);
@@ -144,15 +151,13 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
     if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     heartbeatRef.current = setInterval(async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("attendance-clock", {
-          body: {
-            action: "heartbeat",
-            method: "terminal_qr",
-            terminal_id: terminalId,
-            terminal_key: terminalKey,
-          },
+        const { data, error } = await callEdgeFunction({
+          action: "heartbeat",
+          method: "terminal_qr",
+          terminal_id: terminalId,
+          terminal_key: terminalKey,
         });
-        if (error || data?.error) { setHeartbeatOk(false); return; }
+        if (error) { setHeartbeatOk(false); return; }
         setHeartbeatOk(data.success && data.is_active);
         if (data.is_active === false) {
           setAuthenticated(false);
@@ -183,18 +188,15 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
       // The terminal scans the employee's QR, which contains the employee's token
       // For testing, we generate an employee token first by providing a staff_number
       // In production, the camera reads the QR and sends the token directly
-      const { data, error } = await supabase.functions.invoke("attendance-clock", {
-        body: {
-          action: "clock",
-          method: "terminal_qr",
-          terminal_id: terminalId,
-          terminal_key: terminalKey,
-          qr_token: token,
-        },
+      const { data, error } = await callEdgeFunction({
+        action: "clock",
+        method: "terminal_qr",
+        terminal_id: terminalId,
+        terminal_key: terminalKey,
+        qr_token: token,
       });
 
-      if (error) throw new Error(error.message || "Erreur");
-      if (data?.error) throw new Error(data.error);
+      if (error) throw new Error(error);
 
       setScanResult({
         type: data.event.event_type,

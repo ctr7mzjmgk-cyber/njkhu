@@ -81,18 +81,14 @@ export default function EmployeeQRPage() {
     setGenerating(true);
     try {
       const session = (await supabase.auth.getSession()).data.session;
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/attendance-clock`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({ action: "generate_qr", method: "employee_qr" }),
-        }
-      );
+      const response = await fetch("/api/attendance-clock", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ action: "generate_qr", method: "employee_qr" }),
+      });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Erreur");
