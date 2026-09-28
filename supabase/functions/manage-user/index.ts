@@ -128,11 +128,36 @@ Deno.serve(async (req: Request) => {
     if (action === "create_user") {
       const data = body as CreateUserData;
 
-      if (!data.email || !data.first_name || !data.last_name || !data.institution_id || !data.role_code) {
+      if (!data.email || !data.first_name || !data.last_name || !data.role_code) {
         return new Response(JSON.stringify({ error: "Missing required fields" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      // Derive institution_id from the CALLER's profile, not from the client request.
+      // This prevents creating users in institutions the caller doesn't belong to.
+      const { data: callerIsSuperAdmin } = await userClient.rpc("is_super_admin");
+      let targetInstitutionId = data.institution_id;
+
+      if (callerIsSuperAdmin && data.institution_id) {
+        // Super admin can specify any institution
+        targetInstitutionId = data.institution_id;
+      } else {
+        // Non-super-admin: must use their own institution
+        const { data: callerProfile } = await adminClient
+          .from("profiles")
+          .select("institution_id")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (!callerProfile?.institution_id) {
+          return new Response(JSON.stringify({ error: "Aucune institution associée à votre compte" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        targetInstitutionId = callerProfile.institution_id;
       }
 
       const password = data.password && data.password.length >= 6 ? data.password : generateTempPassword();
@@ -154,7 +179,7 @@ Deno.serve(async (req: Request) => {
         .from("profiles")
         .upsert({
           id: newUserId,
-          institution_id: data.institution_id,
+          institution_id: targetInstitutionId,
           first_name: data.first_name,
           last_name: data.last_name,
           phone: data.phone || null,
@@ -181,7 +206,7 @@ Deno.serve(async (req: Request) => {
         .insert({
           user_id: newUserId,
           role_id: role.id,
-          institution_id: data.institution_id,
+          institution_id: targetInstitutionId,
         });
 
       if (roleError) throw roleError;
@@ -201,35 +226,37 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      const { data: role } = await adminClient
-        .from("roles")
-        .select("id")
-        .eq("code", data.role_code)
-        .maybeSingle();
+      // Derive institution from caller
+      const { data: callerIsSuperAdmin } = await userClient.rpc("is_super_admin");
+      let targetInstId = data.institution_id;
+      if (!callerIsSuperAdmin) {
+        const { data: callerProfile } = await adminClient
+          .from("profiles").select("institution_id").eq("id", user.id).maybeSingle();
+        targetInstId = callerProfile?.institution_id;
+        if (!targetInstId) {
+          return new Response(JSON.stringify({ error: "Aucune institution associée à votre compte" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
 
+      const { data: role } = await adminClient
+        .from("roles").select("id").eq("code", data.role_code).maybeSingle();
       if (!role) {
         return new Response(JSON.stringify({ error: "Role not found" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       const { error: deleteErr } = await adminClient
-        .from("user_roles")
-        .delete()
-        .eq("user_id", data.user_id)
-        .eq("institution_id", data.institution_id);
-
+        .from("user_roles").delete()
+        .eq("user_id", data.user_id).eq("institution_id", targetInstId);
       if (deleteErr) throw deleteErr;
 
       const { error: insertErr } = await adminClient
-        .from("user_roles")
-        .insert({
-          user_id: data.user_id,
-          role_id: role.id,
-          institution_id: data.institution_id,
+        .from("user_roles").insert({
+          user_id: data.user_id, role_id: role.id, institution_id: targetInstId,
         });
-
       if (insertErr) throw insertErr;
 
       return new Response(JSON.stringify({ success: true }), {
@@ -242,16 +269,26 @@ Deno.serve(async (req: Request) => {
       const { data: canUpdate } = await userClient.rpc("has_permission", { p_code: "users.update" });
       if (!canUpdate) {
         return new Response(JSON.stringify({ error: "Forbidden: users.update required" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const { error } = await adminClient
-        .from("profiles")
-        .update({ is_active: data.is_active })
-        .eq("id", data.user_id);
+      const { data: callerIsSuperAdmin } = await userClient.rpc("is_super_admin");
+      if (!callerIsSuperAdmin) {
+        // Verify target user is in the same institution
+        const { data: callerProfile } = await adminClient
+          .from("profiles").select("institution_id").eq("id", user.id).maybeSingle();
+        const { data: targetProfile } = await adminClient
+          .from("profiles").select("institution_id").eq("id", data.user_id).maybeSingle();
+        if (!callerProfile?.institution_id || callerProfile.institution_id !== targetProfile?.institution_id) {
+          return new Response(JSON.stringify({ error: "Vous ne pouvez modifier que les utilisateurs de votre institution" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
 
+      const { error } = await adminClient
+        .from("profiles").update({ is_active: data.is_active }).eq("id", data.user_id);
       if (error) throw error;
 
       return new Response(JSON.stringify({ success: true }), {
@@ -265,12 +302,23 @@ Deno.serve(async (req: Request) => {
       const { data: canUpdate } = await userClient.rpc("has_permission", { p_code: "users.update" });
       if (!canUpdate) {
         return new Response(JSON.stringify({ error: "Forbidden: users.update required" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       const { data: callerIsSuperAdmin } = await userClient.rpc("is_super_admin");
+      let targetInstId = data.institution_id;
+      if (!callerIsSuperAdmin) {
+        const { data: callerProfile } = await adminClient
+          .from("profiles").select("institution_id").eq("id", user.id).maybeSingle();
+        targetInstId = callerProfile?.institution_id;
+        if (!targetInstId) {
+          return new Response(JSON.stringify({ error: "Aucune institution associée à votre compte" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
       const SENSITIVE = ["super_admin", "direction"];
       if (data.role_codes.some((c) => SENSITIVE.includes(c)) && !callerIsSuperAdmin) {
         return new Response(JSON.stringify({ error: "Seul un super admin peut attribuer un rôle sensible" }), {
@@ -283,7 +331,7 @@ Deno.serve(async (req: Request) => {
         .from("user_roles")
         .select("role_id, roles(code)")
         .eq("user_id", data.user_id)
-        .eq("institution_id", data.institution_id);
+        .eq("institution_id", targetInstId);
 
       const currentSensitive = (existingRoles ?? []).filter((ur) =>
         ur.roles && SENSITIVE.includes((ur.roles as { code: string }).code)
@@ -308,7 +356,7 @@ Deno.serve(async (req: Request) => {
         .from("user_roles")
         .delete()
         .eq("user_id", data.user_id)
-        .eq("institution_id", data.institution_id);
+        .eq("institution_id", targetInstId);
 
       if (deleteErr) throw deleteErr;
 
@@ -319,7 +367,7 @@ Deno.serve(async (req: Request) => {
           .map((role_id) => ({
             user_id: data.user_id,
             role_id: role_id as string,
-            institution_id: data.institution_id,
+            institution_id: targetInstId,
           }));
 
         if (inserts.length > 0) {
