@@ -13,6 +13,16 @@ import {
 } from "lucide-react";
 
 const QR_TTL = 10;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+function edgeHeaders(extra?: Record<string, string>): Record<string, string> {
+  return {
+    "Content-Type": "application/json",
+    apikey: SUPABASE_ANON_KEY,
+    ...extra,
+  };
+}
 
 export default function TerminalKioskPage({ params }: { params: { terminalId: string } }) {
   const { terminalId } = params;
@@ -59,10 +69,10 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
     setGenerating(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/attendance-clock`,
+        `${SUPABASE_URL}/functions/v1/attendance-clock`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: edgeHeaders(),
           body: JSON.stringify({
             action: "terminal_qr",
             method: "terminal_qr",
@@ -102,10 +112,10 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
     setGenerating(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/attendance-clock`,
+        `${SUPABASE_URL}/functions/v1/attendance-clock`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: edgeHeaders(),
           body: JSON.stringify({
             action: "terminal_qr",
             method: "terminal_qr",
@@ -153,10 +163,10 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
     heartbeatRef.current = setInterval(async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/attendance-clock`,
+          `${SUPABASE_URL}/functions/v1/attendance-clock`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: edgeHeaders(),
             body: JSON.stringify({
               action: "heartbeat",
               method: "terminal_qr",
@@ -197,10 +207,10 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
       // For testing, we generate an employee token first by providing a staff_number
       // In production, the camera reads the QR and sends the token directly
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/attendance-clock`,
+        `${SUPABASE_URL}/functions/v1/attendance-clock`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: edgeHeaders(),
           body: JSON.stringify({
             action: "clock",
             method: "terminal_qr",

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareClient } from "@/lib/supabase/middleware";
 
 const PUBLIC_ROUTES = ["/", "/auth/login", "/auth/forgot-password", "/403", "/formations", "/contact", "/faq", "/candidature"];
-const PUBLIC_ROUTE_PREFIXES = ["/formations/", "/actualites", "/evenements"];
+const PUBLIC_ROUTE_PREFIXES = ["/formations/", "/actualites", "/evenements", "/rh/borne-pointage/"];
 
 function isPublicRoute(pathname: string): boolean {
   if (PUBLIC_ROUTES.includes(pathname)) return true;
