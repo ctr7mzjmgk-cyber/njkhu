@@ -13,16 +13,8 @@ import {
 } from "lucide-react";
 
 const QR_TTL = 10;
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-function edgeHeaders(extra?: Record<string, string>): Record<string, string> {
-  return {
-    "Content-Type": "application/json",
-    apikey: SUPABASE_ANON_KEY,
-    ...extra,
-  };
-}
+import { supabase } from "@/lib/supabase/client";
 
 export default function TerminalKioskPage({ params }: { params: { terminalId: string } }) {
   const { terminalId } = params;
@@ -68,22 +60,17 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
 
     setGenerating(true);
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/attendance-clock`,
-        {
-          method: "POST",
-          headers: edgeHeaders(),
-          body: JSON.stringify({
-            action: "terminal_qr",
-            method: "terminal_qr",
-            terminal_id: terminalId,
-            terminal_key: useKey,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("attendance-clock", {
+        body: {
+          action: "terminal_qr",
+          method: "terminal_qr",
+          terminal_id: terminalId,
+          terminal_key: useKey,
+        },
+      });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Erreur");
+      if (error) throw new Error(error.message || "Erreur");
+      if (data?.error) throw new Error(data.error);
 
       sessionStorage.setItem(`terminal_key_${terminalId}`, useKey);
       setAuthenticated(true);
@@ -111,22 +98,17 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
     if (!terminalKey) return;
     setGenerating(true);
     try {
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/attendance-clock`,
-        {
-          method: "POST",
-          headers: edgeHeaders(),
-          body: JSON.stringify({
-            action: "terminal_qr",
-            method: "terminal_qr",
-            terminal_id: terminalId,
-            terminal_key: terminalKey,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("attendance-clock", {
+        body: {
+          action: "terminal_qr",
+          method: "terminal_qr",
+          terminal_id: terminalId,
+          terminal_key: terminalKey,
+        },
+      });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Erreur");
+      if (error) throw new Error(error.message || "Erreur");
+      if (data?.error) throw new Error(data.error);
       setToken(data.token);
     } catch {
       setHeartbeatOk(false);
@@ -162,20 +144,15 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
     if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     heartbeatRef.current = setInterval(async () => {
       try {
-        const response = await fetch(
-          `${SUPABASE_URL}/functions/v1/attendance-clock`,
-          {
-            method: "POST",
-            headers: edgeHeaders(),
-            body: JSON.stringify({
-              action: "heartbeat",
-              method: "terminal_qr",
-              terminal_id: terminalId,
-              terminal_key: terminalKey,
-            }),
-          }
-        );
-        const data = await response.json();
+        const { data, error } = await supabase.functions.invoke("attendance-clock", {
+          body: {
+            action: "heartbeat",
+            method: "terminal_qr",
+            terminal_id: terminalId,
+            terminal_key: terminalKey,
+          },
+        });
+        if (error || data?.error) { setHeartbeatOk(false); return; }
         setHeartbeatOk(data.success && data.is_active);
         if (data.is_active === false) {
           setAuthenticated(false);
@@ -206,23 +183,18 @@ export default function TerminalKioskPage({ params }: { params: { terminalId: st
       // The terminal scans the employee's QR, which contains the employee's token
       // For testing, we generate an employee token first by providing a staff_number
       // In production, the camera reads the QR and sends the token directly
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/attendance-clock`,
-        {
-          method: "POST",
-          headers: edgeHeaders(),
-          body: JSON.stringify({
-            action: "clock",
-            method: "terminal_qr",
-            terminal_id: terminalId,
-            terminal_key: terminalKey,
-            qr_token: token,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("attendance-clock", {
+        body: {
+          action: "clock",
+          method: "terminal_qr",
+          terminal_id: terminalId,
+          terminal_key: terminalKey,
+          qr_token: token,
+        },
+      });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Erreur");
+      if (error) throw new Error(error.message || "Erreur");
+      if (data?.error) throw new Error(data.error);
 
       setScanResult({
         type: data.event.event_type,
