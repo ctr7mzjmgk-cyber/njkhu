@@ -22,8 +22,12 @@ import { supabase } from "@/lib/supabase/client";
 import { getStaffDisplayName, getStaffInitials } from "@/lib/hr/staff-utils";
 import {
   Clock, LogIn, LogOut, Search, Loader as Loader2, Calendar,
-  ArrowDownUp, MapPin, History, User,
+  ArrowDownUp, MapPin, History, User, Edit, Save,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import type { Database } from "@/lib/types/database";
 
 type AttendanceEvent = Database["public"]["Tables"]["attendance_events"]["Row"] & {
@@ -70,6 +74,14 @@ export default function AttendancePage() {
 
   const canManage = permissions.includes("hr.create" as never);
   const canConfig = permissions.includes("attendance.manage" as never);
+  const canCorrect = permissions.includes("hr.update" as never);
+
+  // Correction dialog
+  const [correctingEvent, setCorrectingEvent] = useState<AttendanceEvent | null>(null);
+  const [correctedTime, setCorrectedTime] = useState("");
+  const [correctedType, setCorrectedType] = useState("clock_in");
+  const [correctionReason, setCorrectionReason] = useState("");
+  const [savingCorrection, setSavingCorrection] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!profile?.institution_id) { setLoading(false); return; }
@@ -185,6 +197,63 @@ export default function AttendancePage() {
   const formatTime = (ts: string) => new Date(ts).toLocaleTimeString("fr-FR", {
     hour: "2-digit", minute: "2-digit", second: "2-digit",
   });
+
+  const openCorrection = (e: AttendanceEvent) => {
+    setCorrectingEvent(e);
+    const dt = new Date(e.server_timestamp);
+    const localDT = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    setCorrectedTime(localDT);
+    setCorrectedType(e.event_type);
+    setCorrectionReason("");
+  };
+
+  const handleSaveCorrection = async () => {
+    if (!correctingEvent || !profile?.institution_id || !correctionReason.trim()) return;
+    setSavingCorrection(true);
+    try {
+      const session = (await supabase.auth.getSession()).data.session;
+      const originalData = {
+        event_type: correctingEvent.event_type,
+        server_timestamp: correctingEvent.server_timestamp,
+      };
+      const newTimestamp = new Date(correctedTime).toISOString();
+      const correctedData = {
+        event_type: correctedType,
+        server_timestamp: newTimestamp,
+      };
+
+      // Insert correction record
+      const { error: corrError } = await supabase.from("attendance_corrections").insert({
+        institution_id: profile.institution_id,
+        event_id: correctingEvent.id,
+        staff_id: correctingEvent.staff_id,
+        corrected_by: session?.user?.id ?? "",
+        correction_type: correctedType !== correctingEvent.event_type ? "change_type" : "edit_time",
+        original_data: originalData,
+        corrected_data: correctedData,
+        reason: correctionReason.trim(),
+      });
+      if (corrError) throw corrError;
+
+      // Update the event itself
+      const { error: updateError } = await supabase
+        .from("attendance_events")
+        .update({
+          event_type: correctedType,
+          server_timestamp: newTimestamp,
+        })
+        .eq("id", correctingEvent.id);
+      if (updateError) throw updateError;
+
+      toast({ title: "Correction enregistrée", description: "L'événement a été corrigé avec traçabilité." });
+      setCorrectingEvent(null);
+      fetchData();
+    } catch (err) {
+      toast({ title: "Erreur", description: err instanceof Error ? err.message : "Une erreur est survenue", variant: "destructive" });
+    } finally {
+      setSavingCorrection(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -341,6 +410,7 @@ export default function AttendancePage() {
                     <TableHead>Heure</TableHead>
                     <TableHead>Méthode</TableHead>
                     <TableHead>Localisation</TableHead>
+                    {canCorrect && <TableHead className="w-[60px]" />}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -389,6 +459,13 @@ export default function AttendancePage() {
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </TableCell>
+                      {canCorrect && (
+                        <TableCell>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openCorrection(e)} title="Corriger">
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -451,6 +528,55 @@ export default function AttendancePage() {
           </Card>
         )}
       </div>
+
+      {/* Correction dialog */}
+      <Dialog open={!!correctingEvent} onOpenChange={(open) => !open && setCorrectingEvent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Corriger un pointage</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {correctingEvent && (
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                <p className="text-xs text-muted-foreground">Événement original</p>
+                <p className="text-sm font-mono">
+                  {correctingEvent.event_type === "clock_in" ? "Entrée" : "Sortie"} — {formatTime(correctingEvent.server_timestamp)}
+                </p>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="corr_time">Nouvelle heure</Label>
+                <Input id="corr_time" type="datetime-local" value={correctedTime} onChange={(e) => setCorrectedTime(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="corr_type">Type</Label>
+                <Select value={correctedType} onValueChange={setCorrectedType}>
+                  <SelectTrigger id="corr_type"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="clock_in">Entrée</SelectItem>
+                    <SelectItem value="clock_out">Sortie</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="corr_reason">Motif de la correction *</Label>
+              <Textarea id="corr_reason" value={correctionReason} onChange={(e) => setCorrectionReason(e.target.value)} placeholder="Expliquez pourquoi cette correction est nécessaire..." rows={3} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              La correction est tracée dans l'historique. L'événement original n'est jamais supprimé.
+            </p>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Annuler</Button></DialogClose>
+            <Button onClick={handleSaveCorrection} disabled={savingCorrection || !correctionReason.trim()}>
+              {savingCorrection ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Enregistrer la correction
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

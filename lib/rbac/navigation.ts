@@ -26,6 +26,9 @@ import {
   Clock,
   Cpu,
   QrCode,
+  CalendarCheck,
+  CalendarOff,
+  FileClock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -319,6 +322,30 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/app/hr/terminals",
         icon: Cpu,
         permissions: ["attendance.manage"],
+      },
+      {
+        label: "Horaires",
+        href: "/app/hr/schedules",
+        icon: CalendarCheck,
+        permissions: ["hr.view"],
+      },
+      {
+        label: "Congés",
+        href: "/app/hr/leave",
+        icon: CalendarOff,
+        permissions: ["hr.view"],
+      },
+      {
+        label: "Calendrier",
+        href: "/app/hr/calendar",
+        icon: CalendarDays,
+        permissions: ["hr.view"],
+      },
+      {
+        label: "Rapports pointage",
+        href: "/app/hr/reports",
+        icon: FileClock,
+        permissions: ["hr.view"],
       },
     ],
   },

@@ -1255,6 +1255,91 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["attendance_qr_tokens"]["Insert"]>;
       };
+      attendance_schedules: {
+        Row: {
+          id: string;
+          institution_id: string;
+          staff_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+          grace_minutes: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          staff_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+          grace_minutes?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["attendance_schedules"]["Insert"]>;
+      };
+      attendance_leave_requests: {
+        Row: {
+          id: string;
+          institution_id: string;
+          staff_id: string;
+          leave_type: "vacation" | "sick" | "personal" | "unpaid" | "other";
+          start_date: string;
+          end_date: string;
+          reason: string | null;
+          status: "pending" | "approved" | "rejected" | "cancelled";
+          approved_by: string | null;
+          approved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          staff_id: string;
+          leave_type: string;
+          start_date: string;
+          end_date: string;
+          reason?: string | null;
+          status?: string;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["attendance_leave_requests"]["Insert"]>;
+      };
+      attendance_corrections: {
+        Row: {
+          id: string;
+          institution_id: string;
+          event_id: string;
+          staff_id: string;
+          corrected_by: string;
+          correction_type: "edit_time" | "add_missing" | "remove_invalid" | "change_type";
+          original_data: Record<string, unknown>;
+          corrected_data: Record<string, unknown>;
+          reason: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          institution_id: string;
+          event_id: string;
+          staff_id: string;
+          corrected_by: string;
+          correction_type: string;
+          original_data: Record<string, unknown>;
+          corrected_data: Record<string, unknown>;
+          reason: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["attendance_corrections"]["Insert"]>;
+      };
     };
     Views: Record<string, never>;
     Functions: {
